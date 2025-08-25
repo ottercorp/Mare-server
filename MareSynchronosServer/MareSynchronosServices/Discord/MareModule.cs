@@ -649,11 +649,10 @@ public class MareModule : InteractionModuleBase
             var reportChannelId = _mareServicesConfiguration.GetValue<ulong?>(nameof(ServicesConfiguration.DiscordChannelForReports));
             var restChannel = await Context.Guild.GetTextChannelAsync(reportChannelId.Value).ConfigureAwait(false);
 
-            if (warning is null || warning.Time.AddMonths(6) < DateTime.UtcNow) //初次
+            if (warning is null) //初次
             {
-                await discordUser.AddRoleAsync(roleId.Value).ConfigureAwait(false);
-                if (warning is null)
                 {
+                    await discordUser.AddRoleAsync(roleId.Value).ConfigureAwait(false);
                     var newWarning = new Warning
                     {
                         DiscordId = dcid,
@@ -661,11 +660,6 @@ public class MareModule : InteractionModuleBase
                         Reason = reason,
                     };
                     await dbContext.AddAsync(newWarning).ConfigureAwait(false);
-                }
-                else
-                {
-                    warning.Time = DateTime.UtcNow;
-                    warning.Reason = reason;
                 }
                 await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
