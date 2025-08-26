@@ -604,6 +604,7 @@ public class MareModule : InteractionModuleBase
 
             if (desiredUid != null)
             {
+                desiredUid = desiredUid.Trim();
                 var auth = await dbContext.Auth.AsNoTracking()
                     .FirstOrDefaultAsync(a => a.UserUID == desiredUid || a.PrimaryUserUID == desiredUid)
                     .ConfigureAwait(false);
