@@ -164,6 +164,6 @@ public class MareDbContext : DbContext
         mb.Entity<PFinder>().HasOne(x => x.Group).WithMany().HasForeignKey(x => x.GroupId)
             .OnDelete(DeleteBehavior.SetNull);
         mb.Entity<PFinder>().HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
