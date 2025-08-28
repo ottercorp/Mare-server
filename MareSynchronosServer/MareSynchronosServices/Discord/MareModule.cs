@@ -159,7 +159,9 @@ public class MareModule : InteractionModuleBase
         using var scope = _services.CreateScope();
         using var db = scope.ServiceProvider.GetService<MareDbContext>();
 
-        if (!(await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(a => a.DiscordId == Context.Interaction.User.Id))?.User?.IsAdmin ?? true)
+        var source = (await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(a => a.DiscordId == Context.Interaction.User.Id))?.User;
+
+        if (source?.IsAdmin is not true && source?.IsModerator is not true)
         {
             await RespondAsync("权限不足", ephemeral: true).ConfigureAwait(false);
             return;
@@ -588,7 +590,7 @@ public class MareModule : InteractionModuleBase
 
             var roleId = _mareServicesConfiguration.GetValueOrDefault<ulong?>(nameof(ServicesConfiguration.WarningRole), 1329441701487575070);
 
-            if (await Context.Guild.GetRoleAsync(roleId.Value).ConfigureAwait(false) is null)
+            if (roleId is null || await Context.Guild.GetRoleAsync(roleId.Value).ConfigureAwait(false) is null)
             {
                 await RespondAsync($"未查找到 <{roleId}> 对应角色组, 请检查后再试.", ephemeral:true).ConfigureAwait(false);
                 return;
