@@ -14,12 +14,15 @@ public class SpeedTestController : ControllerBase
     private readonly IConfigurationService<StaticFilesServerConfiguration> _configurationService;
     private const string RandomByteDataName = "SpeedTestRandomByteData";
     private static readonly SemaphoreSlim _speedtestSemaphore = new(10, 10);
+    private readonly List<string> _speedtestWhiteList = new();
 
     public SpeedTestController(ILogger<SpeedTestController> logger, IMemoryCache memoryCache,
         IConfigurationService<StaticFilesServerConfiguration> configurationService) : base(logger)
     {
         _memoryCache = memoryCache;
         _configurationService = configurationService;
+        _speedtestWhiteList =
+            _configurationService.GetValueOrDefault(nameof(StaticFilesServerConfiguration.SpeedtestWhiteList), new  List<string>());
     }
 
     [HttpGet(MareFiles.Speedtest_Run)]
@@ -27,7 +30,7 @@ public class SpeedTestController : ControllerBase
     {
         var user = HttpContext.User.Claims.First(f => string.Equals(f.Type, MareClaimTypes.Uid, StringComparison.Ordinal)).Value;
         var speedtestLimit = _configurationService.GetValueOrDefault(nameof(StaticFilesServerConfiguration.SpeedTestHoursRateLimit), 0.5);
-        if (_memoryCache.TryGetValue<DateTime>(user, out var value))
+        if (_memoryCache.TryGetValue<DateTime>(user, out var value) && !_speedtestWhiteList.Contains(user, StringComparer.OrdinalIgnoreCase))
         {
             var hoursRemaining = value.Subtract(DateTime.UtcNow).TotalHours;
             return StatusCode(429, $"每 {speedtestLimit} 小时才能进行一次测速. 剩余 {hoursRemaining:F2} 小时.");

@@ -25,6 +25,9 @@ public class StaticFilesServerConfiguration : MareConfigurationBase
     [RemoteConfiguration]
     public Uri CdnFullUrl { get; set; } = null;
     public ShardConfiguration? ShardConfiguration { get; set; } = null;
+
+    public List<string>? SpeedtestWhiteList { get; set; } =  null;
+
     public override string ToString()
     {
         StringBuilder sb = new();
@@ -40,6 +43,7 @@ public class StaticFilesServerConfiguration : MareConfigurationBase
         sb.AppendLine($"{nameof(CacheDirectory)} => {CacheDirectory}");
         sb.AppendLine($"{nameof(DownloadQueueSize)} => {DownloadQueueSize}");
         sb.AppendLine($"{nameof(DownloadQueueReleaseSeconds)} => {DownloadQueueReleaseSeconds}");
+        sb.AppendLine($"{nameof(SpeedtestWhiteList)} => {SpeedtestWhiteList}");
         return sb.ToString();
     }
 }
