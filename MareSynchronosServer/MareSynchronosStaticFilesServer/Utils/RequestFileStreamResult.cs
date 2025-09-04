@@ -21,8 +21,10 @@ public class RequestFileStreamResult : FileStreamResult
 
     public override void ExecuteResult(ActionContext context)
     {
+        var response = context.HttpContext.Response;
         try
         {
+            response.Headers.Append("Cache-Control", "public, max-age=43200");
             base.ExecuteResult(context);
         }
         catch
@@ -40,8 +42,10 @@ public class RequestFileStreamResult : FileStreamResult
 
     public override async Task ExecuteResultAsync(ActionContext context)
     {
+        var response = context.HttpContext.Response;
         try
         {
+            response.Headers.Append("Cache-Control", "public, max-age=43200");
             await base.ExecuteResultAsync(context).ConfigureAwait(false);
         }
         catch
