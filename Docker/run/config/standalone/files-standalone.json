@@ -38,7 +38,14 @@
         "MainFileServerAddress": "",
         "Jwt": "teststringteststringteststringteststringteststringteststringteststringteststringteststringteststring",
         "UseColdStorage": false,
-        "IsDistributionNode": true
+        "IsDistributionNode": true,
+        "SpeedtestWhiteList": [
+            "JH762B7HDV",
+            "H7YGFBDT4F",
+            "KSYC7BS9DX",
+            "0T46YZFK3B",
+            "HB7G4CCO0L"
+        ]
     },
     "AllowedHosts": "*",
     "Kestrel": {

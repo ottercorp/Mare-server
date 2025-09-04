@@ -10,6 +10,9 @@
 *.userosscache
 *.sln.docstates
 
+/MareSynchronosServer/.idea
+/.idea
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -352,5 +355,4 @@ MigrationBackup/
 # docker run data
 Docker/run/data/
 Docker/run/compose/.env
-/MareSynchronosServer/.idea
-/.idea
+Docker/run/config/docker

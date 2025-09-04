@@ -115,6 +115,26 @@ services:
       mare-server:
         condition: service_healthy
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - "../config/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+    restart: on-failure
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../config/docker/grafana:/var/lib/grafana
+    environment:
+      - GF_DATE_FORMATS_DEFAULT_TIMEZONE=Asia/Shanghai
+    restart: on-failure
+
 volumes:
   postgres_socket:
   cache:
