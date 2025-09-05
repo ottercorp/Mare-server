@@ -35,10 +35,10 @@ public class RequestQueueService : IHostedService
         _cachedFileProvider = cachedFileProvider;
     }
 
-    public void ActivateRequest(Guid request)
+    public void ActivateRequest(Guid request, string userId)
     {
         _logger.LogDebug("Activating request {guid}", request);
-        var req = _userQueueRequests.First(f => f != null && f.UserRequest.RequestId == request);
+        var req = _userQueueRequests.First(f => f != null && f.UserRequest.RequestId == request && string.Equals(f.UserRequest.User, userId, StringComparison.Ordinal));
         req.MarkActive();
     }
 
@@ -54,18 +54,18 @@ public class RequestQueueService : IHostedService
         GetQueue(isPriority).Enqueue(request);
     }
 
-    public void FinishRequest(Guid request)
+    public void FinishRequest(Guid request, string userId)
     {
-        var req = _userQueueRequests.FirstOrDefault(f => f != null && f.UserRequest.RequestId == request);
+        var req = _userQueueRequests.FirstOrDefault(f => f != null && f.UserRequest.RequestId == request && string.Equals(f.UserRequest.User, userId, StringComparison.Ordinal));
         if (req != null)
         {
             var idx = Array.IndexOf(_userQueueRequests, req);
-            _logger.LogDebug("Finishing Request {guid}, clearing slot {idx}", request, idx);
+            _logger.LogDebug("Finishing Request {guid} for {user}, clearing slot {idx}", request, userId, idx);
             _userQueueRequests[idx] = null;
         }
         else
         {
-            _logger.LogDebug("Request {guid} already cleared", request);
+            _logger.LogDebug("Request {guid} for {user} already cleared", request, userId);
         }
     }
 

@@ -29,7 +29,7 @@ public class CacheController : ControllerBase
 
         if (!_requestQueue.IsActiveProcessing(requestId, MareUser, out var request)) return BadRequest();
 
-        _requestQueue.ActivateRequest(requestId);
+        _requestQueue.ActivateRequest(requestId, MareUser);
 
         Response.ContentType = "application/octet-stream";
         Response.Headers.CacheControl = "public, max-age=43200";
@@ -49,6 +49,6 @@ public class CacheController : ControllerBase
 
         _fileStatisticsService.LogRequest(requestSize);
 
-        return _requestFileStreamResultFactory.Create(requestId, new BlockFileDataStream(substreams));
+        return _requestFileStreamResultFactory.Create(requestId, MareUser, new BlockFileDataStream(substreams));
     }
 }
