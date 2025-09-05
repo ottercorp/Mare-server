@@ -1,4 +1,6 @@
-﻿using MareSynchronos.API.Routes;
+﻿using System.Security.Cryptography;
+using System.Text;
+using MareSynchronos.API.Routes;
 using MareSynchronosStaticFilesServer.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,18 +36,33 @@ public class RequestController : ControllerBase
     {
         try
         {
-            foreach (var file in files)
+            var list = files.ToList();
+            foreach (var file in list)
             {
                 _logger.LogDebug("Prerequested file: " + file);
                 await _cachedFileProvider.DownloadFileWhenRequired(file).ConfigureAwait(false);
             }
 
-            Guid g = Guid.NewGuid();
-            await _requestQueue.EnqueueUser(new(g, MareUser, files.ToList()), IsPriority, HttpContext.RequestAborted);
+            var g = CreateGuidBasedOnFiles(list);
+            await _requestQueue.EnqueueUser(new(g, MareUser, list), IsPriority, HttpContext.RequestAborted);
 
             return Ok(g);
         }
         catch (OperationCanceledException) { return BadRequest(); }
+    }
+
+    private Guid CreateGuidBasedOnFiles(IEnumerable<string> files)
+    {
+        var list = files.ToList();
+        if (list.Count == 0) return Guid.NewGuid();
+
+        var sortedStrings = list.Order(StringComparer.Ordinal).ToList();
+        var combinedString = string.Join('|', sortedStrings);
+        var inputBytes = Encoding.UTF8.GetBytes(combinedString);
+        var hashBytes = SHA256.HashData(inputBytes);
+        var guidBytes = new byte[16];
+        Buffer.BlockCopy(hashBytes, 0, guidBytes, 0, 16);
+        return new Guid(guidBytes);
     }
 
     [HttpGet]

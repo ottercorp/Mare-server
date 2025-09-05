@@ -32,6 +32,7 @@ public class CacheController : ControllerBase
         _requestQueue.ActivateRequest(requestId);
 
         Response.ContentType = "application/octet-stream";
+        Response.Headers.CacheControl = "public, max-age=43200";
 
         long requestSize = 0;
         List<BlockFileDataSubstream> substreams = new();
