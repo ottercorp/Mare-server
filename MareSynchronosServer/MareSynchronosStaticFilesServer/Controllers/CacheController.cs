@@ -51,4 +51,29 @@ public class CacheController : ControllerBase
 
         return _requestFileStreamResultFactory.Create(requestId, MareUser, new BlockFileDataStream(substreams));
     }
+
+    [HttpGet(MareFiles.Cache_Get_Single)]
+    public async Task<IActionResult> GetSingle(Guid requestId, string hash)
+    {
+        _logger.LogDebug($"GetFileSingle:{MareUser}:{requestId}:{hash}");
+
+        // if (!_requestQueue.IsActiveProcessing(requestId, MareUser, out var request)) return BadRequest();
+        //
+        // _requestQueue.ActivateRequest(requestId, MareUser);
+
+        Response.ContentType = "application/octet-stream";
+        Response.Headers.CacheControl = "public, max-age=604800";
+
+        long requestSize = 0;
+
+        List<BlockFileDataSubstream> substreams = new();
+        var fs = await _cachedFileProvider.DownloadAndGetLocalFileInfo(hash).ConfigureAwait(false);
+        if (fs == null) return NotFound();
+        substreams.Add(new(fs));
+        requestSize += fs.Length;
+        _fileStatisticsService.LogRequest(requestSize, MareUser);
+        return _requestFileStreamResultFactory.Create(requestId, MareUser, new BlockFileDataStream(substreams));
+
+    }
+
 }
