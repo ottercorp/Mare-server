@@ -51,7 +51,8 @@
     "Kestrel": {
         "Endpoints": {
             "Http": {
-                "Url": "http://+:6000"
+                "Url": "http://+:6000",
+                "Protocols": "Http1AndHttp2"
             }
         }
     },
