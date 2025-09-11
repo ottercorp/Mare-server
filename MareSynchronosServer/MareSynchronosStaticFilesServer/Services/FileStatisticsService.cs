@@ -33,10 +33,10 @@ public class FileStatisticsService : IHostedService
         }
     }
 
-    public void LogRequest(long requestSize)
+    public void LogRequest(long requestSize, string userId)
     {
         _metrics.IncCounter(MetricsAPI.CounterFileRequests, 1);
-        _metrics.IncCounter(MetricsAPI.CounterFileRequestSize, requestSize);
+        _metrics.IncCounterWithLabel(MetricsAPI.CounterFileRequestSize, requestSize, userId);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)

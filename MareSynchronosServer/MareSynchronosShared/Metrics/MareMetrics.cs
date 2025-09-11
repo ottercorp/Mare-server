@@ -11,7 +11,11 @@ public class MareMetrics
         foreach (var counter in countersToServe)
         {
             logger.LogInformation($"Creating Metric for Counter {counter}");
-            _counters.Add(counter, Prometheus.Metrics.CreateCounter(counter, counter));
+            if (!string.Equals(counter, MetricsAPI.CounterFileRequestSize, StringComparison.OrdinalIgnoreCase))
+                _counters.Add(counter, Prometheus.Metrics.CreateCounter(counter, counter));
+            else
+                _counters.Add(counter, Prometheus.Metrics.CreateCounter(counter, counter, ["user"]));
+
         }
 
         foreach (var gauge in gaugesToServe)
@@ -79,6 +83,15 @@ public class MareMetrics
         {
             lock (counter)
                 counter.Inc(value);
+        }
+    }
+
+    public void IncCounterWithLabel(string counterName, double value = 1.0, params string[] labels)
+    {
+        if (_counters.TryGetValue(counterName, out Counter counter))
+        {
+            lock (counter)
+                counter.WithLabels(labels).Inc(value);
         }
     }
 }

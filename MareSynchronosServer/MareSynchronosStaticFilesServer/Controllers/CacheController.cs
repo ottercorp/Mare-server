@@ -47,7 +47,7 @@ public class CacheController : ControllerBase
             requestSize += fs.Length;
         }
 
-        _fileStatisticsService.LogRequest(requestSize);
+        _fileStatisticsService.LogRequest(requestSize, MareUser);
 
         return _requestFileStreamResultFactory.Create(requestId, MareUser, new BlockFileDataStream(substreams));
     }
