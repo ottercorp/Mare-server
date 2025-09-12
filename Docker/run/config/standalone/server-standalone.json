@@ -44,7 +44,7 @@
         "MaxGroupUserCount": 500,
         "PurgeUnusedAccounts": true,
         "PurgeUnusedAccountsPeriodInDays": 180,
-        "ExpectedClientVersion": "1.12.0",
+        "ExpectedClientVersion": "1.12.3",
         "XIVAPIKey": ""
     },
     "AllowedHosts": "*",
