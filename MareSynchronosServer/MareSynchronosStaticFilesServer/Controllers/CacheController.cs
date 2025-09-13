@@ -70,6 +70,7 @@ public class CacheController : ControllerBase
 
         Response.ContentType = "application/octet-stream";
         Response.Headers.CacheControl = "public, max-age=604800";
+        Response.Headers.Append("X-Request-ID", requestId.ToString());
 
         long requestSize = 0;
 
