@@ -69,7 +69,6 @@ public class CacheController : ControllerBase
         // _requestQueue.ActivateRequest(requestId, MareUser);
 
         Response.ContentType = "application/octet-stream";
-        Response.Headers.CacheControl = "public, max-age=604800";
         Response.Headers.Append("X-Request-ID", requestId.ToString());
 
         long requestSize = 0;
@@ -79,6 +78,14 @@ public class CacheController : ControllerBase
         if (fs == null) return NotFound();
         substreams.Add(new(fs));
         requestSize += fs.Length;
+        if (requestSize > 0)
+        {
+            Response.Headers.CacheControl = "public, max-age=604800";
+        }
+        else
+        {
+            Response.Headers.CacheControl = "private, no-cache";
+        }
         _fileStatisticsService.LogRequest(requestSize, MareUser);
         return _requestFileStreamResultFactory.Create(requestId, MareUser, new BlockFileDataStream(substreams));
 
