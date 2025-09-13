@@ -53,9 +53,16 @@ public class CacheController : ControllerBase
     }
 
     [HttpGet(MareFiles.Cache_Get_Single)]
-    public async Task<IActionResult> GetSingle(Guid requestId, string hash)
+    public async Task<IActionResult> GetSingle(string hash)
     {
-        _logger.LogDebug($"GetFileSingle:{MareUser}:{requestId}:{hash}");
+        string customRequestIdHeader = Request.Headers["X-Request-ID"];
+
+        if (string.IsNullOrEmpty(customRequestIdHeader) || !Guid.TryParse(customRequestIdHeader, out var requestId))
+        {
+            return BadRequest("Request ID is missing or invalid.");
+        }
+
+        _logger.LogDebug("GetFileSingle:{user}:{requestId}:{hash}", MareUser, requestId, hash);
 
         // if (!_requestQueue.IsActiveProcessing(requestId, MareUser, out var request)) return BadRequest();
         //
