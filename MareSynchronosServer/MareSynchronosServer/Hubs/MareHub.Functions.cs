@@ -177,7 +177,7 @@ public partial class MareHub
         if (user is not null)
         {
             if (user.CharaIds is null) user.CharaIds = new List<string>();
-            if (!user.CharaIds.Contains(AidHash, StringComparer.OrdinalIgnoreCase))
+            if (!user.CharaIds.Contains(AidHash, StringComparer.OrdinalIgnoreCase) && AidHash is not "UNK")
             {
                 user.CharaIds.Add(AidHash);
             }

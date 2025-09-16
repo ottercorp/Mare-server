@@ -148,6 +148,10 @@ public partial class MareHub : Hub<IMareHub>, IMareHub
     [Authorize(Policy = "Authenticated")]
     public override async Task OnConnectedAsync()
     {
+        if (AidHash == "NUK")
+        {
+            _logger.LogCallWarning(MareHubLogger.Args(_contextAccessor.GetIpAddress(), "NoAidHash", UserUID, Context.ConnectionId));
+        }
         if (_userConnections.TryGetValue(UserUID, out var oldId))
         {
             _logger.LogCallWarning(MareHubLogger.Args(_contextAccessor.GetIpAddress(), "UpdatingId", oldId, Context.ConnectionId));

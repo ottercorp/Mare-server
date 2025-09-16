@@ -43,7 +43,13 @@ public abstract class AuthControllerBase : Controller
 
     protected async Task<IActionResult> GenericAuthResponse(MareDbContext dbContext, string charaIdent, SecretKeyAuthReply authResult, string nameWithWorld = "", string? machineId = null, string? aidHash = null)
     {
-        if (aidHash is not null && await IsIdentBanned(dbContext, aidHash))
+        if (aidHash is null)
+        {
+            Logger.LogWarning("Authenticate:AidHash:{id}:{ident}", authResult.Uid, aidHash);
+            return Unauthorized("令牌状态错误, 请联系管理员.");
+        }
+
+        if (await IsIdentBanned(dbContext, aidHash))
         {
             Logger.LogWarning("Authenticate:IDENTBAN:{id}:{ident}", authResult.Uid, charaIdent);
             return Unauthorized("你的FF账号被禁止使用本服务.");
@@ -68,7 +74,7 @@ public abstract class AuthControllerBase : Controller
 
         if (authResult.Permaban || authResult.MarkedForBan)
         {
-            await EnsureBan(authResult.Uid!, authResult.PrimaryUid, charaIdent);
+            await EnsureBan(authResult.Uid!, authResult.PrimaryUid, aidHash);
 
             if (!string.IsNullOrEmpty(machineId))
             {
