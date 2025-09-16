@@ -347,14 +347,14 @@ public class OAuthController : AuthControllerBase
 
     [Authorize(Policy = "OAuthToken")]
     [HttpPost(MareAuth.OAuth_CreateOAuth)]
-    public async Task<IActionResult> CreateTokenWithOAuth(string uid, string charaIdent, string nameWithWorld, string? machineId = null)
+    public async Task<IActionResult> CreateTokenWithOAuth(string uid, string charaIdent, string nameWithWorld, string? machineId = null, string? aidHash = null)
     {
         using var dbContext = await MareDbContextFactory.CreateDbContextAsync();
 
-        return await AuthenticateOAuthInternal(dbContext, uid, charaIdent,nameWithWorld, machineId);
+        return await AuthenticateOAuthInternal(dbContext, uid, charaIdent,nameWithWorld, machineId, aidHash);
     }
 
-    private async Task<IActionResult> AuthenticateOAuthInternal(MareDbContext dbContext, string requestedUid, string charaIdent, string nameWithWorld, string? machineId = null)
+    private async Task<IActionResult> AuthenticateOAuthInternal(MareDbContext dbContext, string requestedUid, string charaIdent, string nameWithWorld, string? machineId = null,  string? aidHash = null)
     {
         try
         {
@@ -369,12 +369,13 @@ public class OAuthController : AuthControllerBase
             if (string.IsNullOrEmpty(requestedUid)) return BadRequest("无 UID");
             if (string.IsNullOrEmpty(charaIdent)) return BadRequest("无 CharaIdent");
             if (string.IsNullOrEmpty(nameWithWorld)) return BadRequest("无效的角色名");
+            if (string.IsNullOrEmpty(aidHash)) return BadRequest("无效的用户");
 
             var ip = HttpAccessor.GetIpAddress();
 
             var authResult = await SecretKeyAuthenticatorService.AuthorizeOauthAsync(ip, primaryUid, requestedUid);
 
-            return await GenericAuthResponse(dbContext, charaIdent, authResult, nameWithWorld, machineId);
+            return await GenericAuthResponse(dbContext, charaIdent, authResult, nameWithWorld, machineId, aidHash);
         }
         catch (Exception ex)
         {

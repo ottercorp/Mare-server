@@ -41,9 +41,9 @@ public abstract class AuthControllerBase : Controller
         Configuration = configuration;
     }
 
-    protected async Task<IActionResult> GenericAuthResponse(MareDbContext dbContext, string charaIdent, SecretKeyAuthReply authResult, string nameWithWorld = "", string? machineId = null)
+    protected async Task<IActionResult> GenericAuthResponse(MareDbContext dbContext, string charaIdent, SecretKeyAuthReply authResult, string nameWithWorld = "", string? machineId = null, string? aidHash = null)
     {
-        if (await IsIdentBanned(dbContext, charaIdent))
+        if (aidHash is not null && await IsIdentBanned(dbContext, aidHash))
         {
             Logger.LogWarning("Authenticate:IDENTBAN:{id}:{ident}", authResult.Uid, charaIdent);
             return Unauthorized("你的FF账号被禁止使用本服务.");
@@ -87,7 +87,7 @@ public abstract class AuthControllerBase : Controller
         }
 
         Logger.LogInformation("Authenticate:SUCCESS:{id}:{ident}", authResult.Uid, charaIdent);
-        return await CreateJwtFromId(authResult.Uid!, charaIdent, authResult.Alias ?? string.Empty, nameWithWorld);
+        return await CreateJwtFromId(authResult.Uid!, charaIdent, authResult.Alias ?? string.Empty, nameWithWorld, aidHash);
     }
 
     protected JwtSecurityToken CreateJwt(IEnumerable<Claim> authClaims)
@@ -105,7 +105,7 @@ public abstract class AuthControllerBase : Controller
         return handler.CreateJwtSecurityToken(token);
     }
 
-    protected async Task<IActionResult> CreateJwtFromId(string uid, string charaIdent, string alias, string nameWithWorld)
+    protected async Task<IActionResult> CreateJwtFromId(string uid, string charaIdent, string alias, string nameWithWorld, string aidHash)
     {
         var token = CreateJwt(new List<Claim>()
         {
@@ -114,7 +114,8 @@ public abstract class AuthControllerBase : Controller
             new Claim(MareClaimTypes.Alias, alias),
             new Claim(MareClaimTypes.Expires, DateTime.UtcNow.AddHours(6).Ticks.ToString(CultureInfo.InvariantCulture)),
             new Claim(MareClaimTypes.Continent, await _geoIPProvider.GetCountryFromIP(HttpAccessor)),
-            new Claim(MareClaimTypes.NameWithWorld, nameWithWorld)
+            new Claim(MareClaimTypes.NameWithWorld, nameWithWorld),
+            new Claim(MareClaimTypes.AidHash, aidHash)
         });
 
         return Content(token.RawData);

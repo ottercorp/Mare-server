@@ -19,6 +19,8 @@ public partial class MareHub
 
     public string NameWithWorld => Context.User?.Claims?.SingleOrDefault(c => string.Equals(c.Type, MareClaimTypes.NameWithWorld, StringComparison.Ordinal))?.Value ?? "UNK";
 
+    public string AidHash => Context.User?.Claims?.SingleOrDefault(c => string.Equals(c.Type, MareClaimTypes.AidHash, StringComparison.Ordinal))?.Value ?? "UNK";
+
     private async Task DeleteUser(User user)
     {
         var ownPairData = await DbContext.ClientPairs.Where(u => u.User.UID == user.UID).ToListAsync().ConfigureAwait(false);
@@ -175,9 +177,9 @@ public partial class MareHub
         if (user is not null)
         {
             if (user.CharaIds is null) user.CharaIds = new List<string>();
-            if (!user.CharaIds.Contains(UserCharaIdent, StringComparer.OrdinalIgnoreCase))
+            if (!user.CharaIds.Contains(AidHash, StringComparer.OrdinalIgnoreCase))
             {
-                user.CharaIds.Add(UserCharaIdent);
+                user.CharaIds.Add(AidHash);
             }
 
             if (user.NameWithWorld != NameWithWorld && NameWithWorld is not "UNK")
