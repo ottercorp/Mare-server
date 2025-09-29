@@ -197,7 +197,8 @@ public partial class MareHub
             GroupGID = newGroup.GID,
             DisableSounds = defaultPermissions.DisableGroupSounds,
             DisableAnimations = defaultPermissions.DisableGroupAnimations,
-            DisableVFX = defaultPermissions.DisableGroupAnimations
+            DisableVFX = defaultPermissions.DisableGroupAnimations,
+            ShareLocation = false,
         };
 
         await DbContext.Groups.AddAsync(newGroup).ConfigureAwait(false);
@@ -371,7 +372,8 @@ public partial class MareHub
                 DisableSounds = dto.GroupUserPreferredPermissions.IsDisableSounds(),
                 DisableVFX = dto.GroupUserPreferredPermissions.IsDisableVFX(),
                 DisableAnimations = dto.GroupUserPreferredPermissions.IsDisableAnimations(),
-                IsPaused = false
+                IsPaused = false,
+                ShareLocation = false,
             };
 
             DbContext.Add(newPerms);
@@ -383,6 +385,7 @@ public partial class MareHub
             preferredPermissions.DisableVFX = dto.GroupUserPreferredPermissions.IsDisableVFX();
             preferredPermissions.DisableAnimations = dto.GroupUserPreferredPermissions.IsDisableAnimations();
             preferredPermissions.IsPaused = false;
+            preferredPermissions.ShareLocation = dto.GroupUserPreferredPermissions.IsSharingLocatio();
             DbContext.Update(preferredPermissions);
         }
 
@@ -423,7 +426,8 @@ public partial class MareHub
                         DisableSounds = preferredPermissions.DisableSounds,
                         DisableVFX = preferredPermissions.DisableVFX,
                         IsPaused = preferredPermissions.IsPaused,
-                        Sticky = false
+                        Sticky = false,
+                        ShareLocation = false,
                     };
 
                     await DbContext.Permissions.AddAsync(ownPermissionsToOther).ConfigureAwait(false);
@@ -435,6 +439,7 @@ public partial class MareHub
                     existingPermissionsOnDb.DisableVFX = preferredPermissions.DisableVFX;
                     existingPermissionsOnDb.IsPaused = false;
                     existingPermissionsOnDb.Sticky = false;
+                    existingPermissionsOnDb.ShareLocation = false;
 
                     DbContext.Update(existingPermissionsOnDb);
 
@@ -450,6 +455,7 @@ public partial class MareHub
                 ownPermissionsToOther.DisableVFX = preferredPermissions.DisableVFX;
                 ownPermissionsToOther.DisableSounds = preferredPermissions.DisableSounds;
                 ownPermissionsToOther.IsPaused = false;
+                ownPermissionsToOther.ShareLocation = false;
 
                 DbContext.Update(ownPermissionsToOther);
             }
@@ -471,7 +477,8 @@ public partial class MareHub
                         DisableSounds = otherPreferred.DisableSounds,
                         DisableVFX = otherPreferred.DisableVFX,
                         IsPaused = otherPreferred.IsPaused,
-                        Sticky = false
+                        Sticky = false,
+                        ShareLocation = false,
                     };
 
                     await DbContext.AddAsync(otherExistingPermsOnDb).ConfigureAwait(false);
@@ -483,6 +490,7 @@ public partial class MareHub
                     otherExistingPermsOnDb.DisableSounds = otherPreferred.DisableSounds;
                     otherExistingPermsOnDb.DisableVFX = otherPreferred.DisableVFX;
                     otherExistingPermsOnDb.IsPaused = otherPreferred.IsPaused;
+                    otherExistingPermsOnDb.ShareLocation = otherPreferred.ShareLocation;
 
                     DbContext.Update(otherExistingPermsOnDb);
                 }
@@ -496,6 +504,7 @@ public partial class MareHub
                 otherPermissionToSelf.DisableSounds = otherPreferred.DisableSounds;
                 otherPermissionToSelf.DisableVFX = otherPreferred.DisableVFX;
                 otherPermissionToSelf.IsPaused = otherPreferred.IsPaused;
+                otherPermissionToSelf.ShareLocation = otherPreferred.ShareLocation;
 
                 DbContext.Update(otherPermissionToSelf);
             }

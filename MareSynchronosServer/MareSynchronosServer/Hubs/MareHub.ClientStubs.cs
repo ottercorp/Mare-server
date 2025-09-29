@@ -57,6 +57,7 @@ namespace MareSynchronosServer.Hubs
         public Task Client_GposeLobbyPushWorldData(UserData userData, WorldData worldData) => throw new PlatformNotSupportedException("Calling clientside method on server not supported");
         public Task Client_UpdateSupporterList(SupporterDto supporterDto) => throw new PlatformNotSupportedException("Calling clientside method on server not supported");
         public Task Client_GroupChat(GroupChatDto dto) => throw new PlatformNotSupportedException("Calling clientside method on server not supported");
+        public Task Client_SendLocationToClient(LocationDto locationDto) => throw new PlatformNotSupportedException("Calling clientside method on server not supported");
         public Task Client_MoodlesShare(MoodlesDto dto) => throw new PlatformNotSupportedException("Calling clientside method on server not supported");
     }
 }

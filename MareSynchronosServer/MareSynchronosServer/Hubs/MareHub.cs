@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using MareSynchronos.API.Dto.CharaData;
 using MareSynchronos.API.Dto.Group;
 using MareSynchronos.API.Dto.User;
 
@@ -200,6 +201,7 @@ public partial class MareHub : Hub<IMareHub>, IMareHub
                 _mareCensus.ClearStatistics(UserUID);
 
                 await SendOfflineToAllPairedUsers().ConfigureAwait(false);
+                await UpdateLocation(new LocationDto(new UserData(UserUID), new LocationInfo()), offline: true).ConfigureAwait(false);
 
                 DbContext.RemoveRange(DbContext.Files.Where(f => !f.Uploaded && f.UploaderUID == UserUID));
                 await DbContext.SaveChangesAsync().ConfigureAwait(false);

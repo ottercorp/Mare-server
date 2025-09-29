@@ -66,6 +66,7 @@ public partial class MareHub
             prevPermissions.DisableSounds = newPerm.IsDisableSounds();
             prevPermissions.DisableVFX = newPerm.IsDisableVFX();
             prevPermissions.Sticky = newPerm.IsSticky() || setSticky;
+            prevPermissions.ShareLocation = newPerm.IsEnabledShareLocation();
             DbContext.Update(prevPermissions);
 
             // send updated data to pair
@@ -112,6 +113,7 @@ public partial class MareHub
             groupPreferredPermissions.DisableAnimations = group.Value.IsDisableAnimations();
             groupPreferredPermissions.IsPaused = group.Value.IsPaused();
             groupPreferredPermissions.DisableVFX = group.Value.IsDisableVFX();
+            groupPreferredPermissions.ShareLocation = group.Value.IsSharingLocatio();
 
             var nonStickyPairs = allUsers.Where(u => !u.Value.OwnPermissions.Sticky).ToList();
             var affectedGroupPairs = nonStickyPairs.Where(u => u.Value.GIDs.Contains(group.Key, StringComparer.Ordinal)).ToList();
@@ -126,6 +128,7 @@ public partial class MareHub
                 perm.DisableAnimations = groupPreferredPermissions.DisableAnimations;
                 perm.IsPaused = groupPreferredPermissions.IsPaused;
                 perm.DisableVFX = groupPreferredPermissions.DisableVFX;
+                perm.ShareLocation = groupPreferredPermissions.ShareLocation;
             }
 
             UserPermissions permissions = UserPermissions.NoneSet;
@@ -133,6 +136,7 @@ public partial class MareHub
             permissions.SetDisableAnimations(groupPreferredPermissions.DisableAnimations);
             permissions.SetDisableSounds(groupPreferredPermissions.DisableSounds);
             permissions.SetDisableVFX(groupPreferredPermissions.DisableVFX);
+            permissions.SetShareLocation(groupPreferredPermissions.ShareLocation);
 
             await Clients.Users(affectedGroupPairs
                 .Select(k => k.Key))

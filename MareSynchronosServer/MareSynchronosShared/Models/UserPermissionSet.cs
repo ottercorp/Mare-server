@@ -15,4 +15,5 @@ public class UserPermissionSet
     public bool DisableAnimations { get; set; } = false;
     public bool DisableVFX { get; set; } = false;
     public bool DisableSounds { get; set; } = false;
+    public bool? ShareLocation { get;set; } = false;
 }

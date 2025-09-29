@@ -10,4 +10,5 @@ public class GroupPairPreferredPermission
     public bool DisableAnimations { get; set; }
     public bool DisableSounds { get; set; }
     public bool DisableVFX { get; set; }
+    public bool? ShareLocation { get; set; } = false;
 }

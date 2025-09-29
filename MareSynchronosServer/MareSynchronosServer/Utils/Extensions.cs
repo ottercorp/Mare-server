@@ -48,6 +48,7 @@ public static class Extensions
         permissions.SetDisableSounds(groupPair.DisableSounds);
         permissions.SetPaused(groupPair.IsPaused);
         permissions.SetDisableVFX(groupPair.DisableVFX);
+        permissions.SetShareLocation(groupPair.ShareLocation ?? false);
         return permissions;
     }
 
@@ -70,6 +71,7 @@ public static class Extensions
         perm.SetDisableVFX(permissions.DisableVFX);
         if (setSticky)
             perm.SetSticky(permissions.Sticky);
+        perm.SetShareLocation(permissions.ShareLocation);
         return perm;
     }
 }

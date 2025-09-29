@@ -471,6 +471,49 @@ public partial class MareHub
         await Clients.Caller.Client_UserUpdateProfile(new(dto.User)).ConfigureAwait(false);
     }
 
+    [Authorize(Policy = "Identified")]
+    public async Task UpdateLocation(LocationDto dto, bool offline = false)
+    {
+        _logger.LogCallInfo(MareHubLogger.Args(dto));
+
+        var permissibleGroupGIDsQuery = DbContext.GroupPairPreferredPermissions.AsNoTracking()
+            .Where(gpp => gpp.UserUID == dto.user.UID && !gpp.IsPaused && gpp.ShareLocation == true)
+            .Select(gpp => gpp.GroupGID);
+
+        var groupUserUIDsQuery = DbContext.GroupPairs.AsNoTracking()
+            .Where(gp => permissibleGroupGIDsQuery.Contains(gp.GroupGID))
+            .Select(gp => gp.GroupUserUID)
+            .Distinct();
+
+        var directlySharedUserUIDsQuery = DbContext.Permissions.AsNoTracking()
+            .Where(p => p.UserUID == dto.user.UID && !p.IsPaused && p.ShareLocation == true)
+            .Select(p => p.OtherUserUID);
+
+        var allUsers = directlySharedUserUIDsQuery.ToList()
+            .Union(groupUserUIDsQuery.ToList(), StringComparer.Ordinal).Distinct(StringComparer.Ordinal);
+
+        if (offline)
+        {
+            await _redis.RemoveAsync("Location:" +  UserUID, StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
+        }
+        else
+        {
+            await _redis.AddAsync($"Location:{dto.user.UID}", dto).ConfigureAwait(false);
+        }
+
+        await Clients.Users(allUsers).Client_SendLocationToClient(dto).ConfigureAwait(false);
+    }
+
+    [Authorize(Policy = "Identified")]
+    public async Task<List<LocationDto>> RequestLocationInfo()
+    {
+        _logger.LogCallInfo();
+        var uids = await GetAllPairedUnpausedUsers().ConfigureAwait(false);
+        var data =await _redis.GetAllAsync<LocationDto>(uids.Select(x => $"Location:{x}").ToHashSet(StringComparer.Ordinal))
+            .ConfigureAwait(false);
+        return data.Select(x => x.Value).ToList();
+    }
+
     [GeneratedRegex(@"^([a-z0-9_ '+&,\.\-\{\}]+\/)+([a-z0-9_ '+&,\.\-\{\}]+\.[a-z]{3,4})$", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ECMAScript)]
     private static partial Regex GamePathRegex();
 

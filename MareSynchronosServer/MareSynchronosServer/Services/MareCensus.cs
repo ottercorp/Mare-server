@@ -22,7 +22,11 @@ public class MareCensus : IHostedService
         {103, "猫小胖"},
         {104, "豆豆柴"},
     };
-    private readonly Dictionary<short, string> _gender = new();
+    private readonly Dictionary<short, string> _gender = new()
+    {
+        {0, "男"},
+        {1, "女"},
+    };
     private readonly ILogger<MareCensus> _logger;
     private readonly Dictionary<short, string> _races = new()
     {
@@ -139,8 +143,6 @@ public class MareCensus : IHostedService
 
         _logger.LogInformation("Census:Init data");
 
-        _gender[0] = "男";
-        _gender[1] = "女";
         // _logger.LogInformation("Loading XIVAPI data");
 
         // using HttpClient client = new HttpClient();
