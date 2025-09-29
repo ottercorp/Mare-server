@@ -498,8 +498,7 @@ public partial class MareHub
         }
         else
         {
-            var json = JsonSerializer.Serialize(dto);
-            await _redis.AddAsync($"Location:{dto.user.UID}", json).ConfigureAwait(false);
+            await _redis.AddAsync($"Location:{dto.user.UID}", dto).ConfigureAwait(false);
         }
 
         await Clients.Users(allUsers).Client_SendLocationToClient(dto).ConfigureAwait(false);
@@ -510,9 +509,9 @@ public partial class MareHub
     {
         _logger.LogCallInfo();
         var uids = await GetAllPairedUnpausedUsers().ConfigureAwait(false);
-        var data =await _redis.GetAllAsync<string>(uids.Select(x => $"Location:{x}").ToHashSet(StringComparer.Ordinal))
+        var data =await _redis.GetAllAsync<LocationDto>(uids.Select(x => $"Location:{x}").ToHashSet(StringComparer.Ordinal))
             .ConfigureAwait(false);
-        return data.Select(x => JsonSerializer.Deserialize<LocationDto>(x.Value)).ToList();
+        return data.Where(x => data.TryGetValue("Location:" + x, out var location) && location is not null).Select(x => x.Value).ToList();
     }
 
     [GeneratedRegex(@"^([a-z0-9_ '+&,\.\-\{\}]+\/)+([a-z0-9_ '+&,\.\-\{\}]+\.[a-z]{3,4})$", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ECMAScript)]
