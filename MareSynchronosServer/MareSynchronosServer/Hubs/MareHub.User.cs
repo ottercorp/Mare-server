@@ -494,11 +494,14 @@ public partial class MareHub
 
         if (offline)
         {
-            await _redis.RemoveAsync("Location:" +  UserUID, StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
+            await _redis.RemoveAsync("Location:" +  dto.user.UID, StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
         }
         else
         {
-            await _redis.AddAsync($"Location:{dto.user.UID}", dto).ConfigureAwait(false);
+
+            _logger.LogCallInfo([$"Adding: {dto}"]);
+            var res =  await _redis.AddAsync($"Location:{dto.user.UID}", dto).ConfigureAwait(false);
+            if (!res) _logger.LogCallWarning([$"Failed to add: {dto}"]);
         }
 
         await Clients.Users(allUsers).Client_SendLocationToClient(dto).ConfigureAwait(false);
