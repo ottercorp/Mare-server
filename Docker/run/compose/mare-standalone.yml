@@ -25,7 +25,7 @@ services:
 
   redis:
     image: redis:latest
-    command: [sh, -c, "rm -f /data/dump.rdb && redis-server --bind 127.0.0.1 --save \"\" --appendonly no --requirepass secretredispassword"]
+    command: [sh, -c, "rm -f /data/dump.rdb && redis-server --bind 0.0.0.0 --save \"\" --appendonly no --requirepass secretredispassword"]
     ports:
       - "6379:6379"
     volumes:
