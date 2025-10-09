@@ -51,7 +51,7 @@ public abstract class AuthControllerBase : Controller
 
         if (await IsIdentBanned(dbContext, aidHash))
         {
-            Logger.LogWarning("Authenticate:IDENTBAN:{id}:{ident}", authResult.Uid, charaIdent);
+            Logger.LogWarning("Authenticate:IDENTBAN:{id}:{ident}", authResult.Uid, aidHash);
             return Unauthorized("你的FF账号被禁止使用本服务.");
         }
 
@@ -63,12 +63,12 @@ public abstract class AuthControllerBase : Controller
 
         if (!authResult.Success && !authResult.TempBan)
         {
-            Logger.LogWarning("Authenticate:INVALID:{id}:{ident}", authResult?.Uid ?? "NOUID", charaIdent);
+            Logger.LogWarning("Authenticate:INVALID:{id}:{ident}", authResult?.Uid ?? "NOUID", aidHash);
             return Unauthorized("密钥无效. 请确认你的Mare账户存在或尝试重新关联DC账户.");
         }
         if (!authResult.Success && authResult.TempBan)
         {
-            Logger.LogWarning("Authenticate:TEMPBAN:{id}:{ident}", authResult.Uid ?? "NOUID", charaIdent);
+            Logger.LogWarning("Authenticate:TEMPBAN:{id}:{ident}", authResult.Uid ?? "NOUID", aidHash);
             return Unauthorized("失败次数过多, 你已被暂时封禁. 请检查你的密钥设置并在5分钟后重试.");
         }
 
@@ -81,18 +81,18 @@ public abstract class AuthControllerBase : Controller
                 await EnsureBan(authResult.Uid!, authResult.PrimaryUid, machineId, true);
             }
 
-            Logger.LogWarning("Authenticate:UIDBAN:{id}:{ident}", authResult.Uid, charaIdent);
+            Logger.LogWarning("Authenticate:UIDBAN:{id}:{ident}", authResult.Uid, aidHash);
             return Unauthorized("你的Mare账号已被封禁.");
         }
 
         var existingIdent = await _redis.StringGetAsync("UID:" + authResult.Uid);
         if (!string.IsNullOrEmpty(existingIdent))
         {
-            Logger.LogWarning("Authenticate:DUPLICATE:{id}:{ident}", authResult.Uid, charaIdent);
+            Logger.LogWarning("Authenticate:DUPLICATE:{id}:{ident}", authResult.Uid, aidHash);
             return Unauthorized("该Mare账号已经登录. 将在60秒后尝试重新登录. 如果依旧无法登录, 请重启游戏.");
         }
 
-        Logger.LogInformation("Authenticate:SUCCESS:{id}:{ident}", authResult.Uid, charaIdent);
+        Logger.LogInformation("Authenticate:SUCCESS:{id}:{ident}", authResult.Uid, aidHash);
         return await CreateJwtFromId(authResult.Uid!, charaIdent, authResult.Alias ?? string.Empty, nameWithWorld, aidHash);
     }
 
