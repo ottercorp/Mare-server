@@ -474,7 +474,7 @@ public partial class MareHub
     [Authorize(Policy = "Identified")]
     public async Task UpdateLocation(LocationDto dto, bool offline = false)
     {
-        _logger.LogCallInfo(MareHubLogger.Args(dto));
+        _logger.LogCallInfo(MareHubLogger.Args(UserUID,dto));
 
         var permissibleGroupGIDsQuery = DbContext.GroupPairPreferredPermissions.AsNoTracking()
             .Where(gpp => gpp.UserUID == dto.user.UID && !gpp.IsPaused && gpp.ShareLocation == true)
