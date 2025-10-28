@@ -508,10 +508,10 @@ public partial class MareHub
     public async Task<List<LocationDto>> RequestLocationInfo()
     {
         _logger.LogCallInfo();
-        var uids = await GetAllPairedUnpausedUsers().ConfigureAwait(false);
+        var uids = DbContext.Permissions.AsNoTracking().Where(x => x.OtherUserUID == UserUID && x.ShareLocation == true)
+            .Select(x => x.UserUID).ToList();
         var data =await _redis.GetAllAsync<LocationDto>(uids.Select(x => $"Location:{x}").ToHashSet(StringComparer.Ordinal))
             .ConfigureAwait(false);
-        _logger.LogCallWarning([data.Where(x => x.Value is not null).Select(x => x.Value).Count()]);
         return data.Where(x => x.Value is not null).Select(x => x.Value).ToList();
     }
 
