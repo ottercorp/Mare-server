@@ -475,6 +475,11 @@ public partial class MareHub
     public async Task UpdateLocation(LocationDto dto, bool offline = false)
     {
         _logger.LogCallInfo(MareHubLogger.Args(UserUID,dto));
+        if (string.IsNullOrEmpty(dto.user.UID))
+        {
+            _logger.LogCallWarning(MareHubLogger.Args("LocationDto with no userinfo :",UserUID, dto));
+            return;
+        }
 
         var permissibleGroupGIDsQuery = DbContext.GroupPairPreferredPermissions.AsNoTracking()
             .Where(gpp => gpp.UserUID == dto.user.UID && !gpp.IsPaused && gpp.ShareLocation == true)
