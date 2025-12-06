@@ -316,18 +316,18 @@ public class MareModule : InteractionModuleBase
         using var scope = _services.CreateScope();
         await using var db = scope.ServiceProvider.GetRequiredService<MareDbContext>();
 
-        var primaryUser = await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(u => u.DiscordId == id).ConfigureAwait(false);
+        var currentUser = await db.LodeStoneAuth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.DiscordId == id).ConfigureAwait(false);
 
         ulong userToCheckForDiscordId = id;
 
-        if (primaryUser == null)
+        if (currentUser == null)
         {
             eb.WithTitle("账号不存在");
             eb.WithDescription("没有与本Discord账号关联的Mare账号");
             return eb;
         }
 
-        bool isAdminCall = primaryUser.User.IsModerator || primaryUser.User.IsAdmin;
+        bool isAdminCall = currentUser.User!.IsModerator || currentUser.User.IsAdmin;
 
         if ((optionalUser != null || uid != null || lodestoneId != null || nameWithWorld != null) && !isAdminCall)
         {
@@ -340,16 +340,16 @@ public class MareModule : InteractionModuleBase
             LodeStoneAuth userInDb = null;
             if (optionalUser != null)
             {
-                userInDb = await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(u => u.DiscordId == optionalUser).ConfigureAwait(false);
+                userInDb = await db.LodeStoneAuth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.DiscordId == optionalUser).ConfigureAwait(false);
             }
             else if (uid != null)
             {
-                var primary = (await db.Auth.SingleOrDefaultAsync(u => (u.UserUID == uid || u.User.Alias == uid) && u.PrimaryUserUID != null))?.PrimaryUserUID ?? uid;//确认是否为子账号，如果是，查找主账号DC信息
-                userInDb = await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(u => u.User.UID == primary || u.User.Alias == primary).ConfigureAwait(false);
+                var primary = (await db.Auth.AsNoTracking().SingleOrDefaultAsync(u => (u.UserUID == uid || u.User.Alias == uid) && u.PrimaryUserUID != null))?.PrimaryUserUID ?? uid;//确认是否为子账号，如果是，查找主账号DC信息
+                userInDb = await db.LodeStoneAuth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.User.UID == primary || u.User.Alias == primary).ConfigureAwait(false);
             }
             else if (lodestoneId != null)
             {
-                userInDb = await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(u => u.HashedLodestoneId == StringUtils.Sha256String(lodestoneId)).ConfigureAwait(false);
+                userInDb = await db.LodeStoneAuth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.HashedLodestoneId == StringUtils.Sha256String(lodestoneId)).ConfigureAwait(false);
             }
             else if (nameWithWorld != null)
             {
@@ -357,7 +357,7 @@ public class MareModule : InteractionModuleBase
                  if (user != null)
                  {
                      var targetUid = user.PrimaryUserUID ?? user.UserUID;
-                     userInDb = await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(u => u.User.UID == targetUid).ConfigureAwait(false);
+                     userInDb = await db.LodeStoneAuth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.User.UID == targetUid).ConfigureAwait(false);
                  }
             }
 
@@ -371,15 +371,15 @@ public class MareModule : InteractionModuleBase
             userToCheckForDiscordId = userInDb.DiscordId;
         }
 
-        var lodestoneUser = await db.LodeStoneAuth.Include(u => u.User).SingleOrDefaultAsync(u => u.DiscordId == userToCheckForDiscordId).ConfigureAwait(false);
+        var lodestoneUser = await db.LodeStoneAuth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.DiscordId == userToCheckForDiscordId).ConfigureAwait(false);
         var dbUser = lodestoneUser.User;
         if (showForSecondaryUser)
         {
-            dbUser = (await db.Auth.Include(u => u.User).SingleOrDefaultAsync(u => u.PrimaryUserUID == dbUser.UID && u.UserUID == secondaryUserUid))?.User;
+            dbUser = (await db.Auth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.PrimaryUserUID == dbUser.UID && u.UserUID == secondaryUserUid))?.User;
             if (dbUser == null)
             {
                 eb.WithTitle("辅助UID不存在");
-                eb.WithDescription($"你的主UID {primaryUser.User.UID} 下不存在辅助UID {secondaryUserUid}.");
+                eb.WithDescription($"你的主UID {currentUser.User.UID} 下不存在辅助UID {secondaryUserUid}.");
                 return eb;
             }
         }
@@ -387,12 +387,12 @@ public class MareModule : InteractionModuleBase
         var secondaryCheck = isAdminCall && uid != null && uid != dbUser?.UID && uid != dbUser.Alias;//查找的UID为子账号
         if (secondaryCheck)
         {
-            dbUser = (await db.Auth.Include(u => u.User).SingleOrDefaultAsync(u => u.User.UID == uid || u.User.Alias == uid))?.User;//显示子账号信息
+            dbUser = (await db.Auth.Include(u => u.User).AsNoTracking().SingleOrDefaultAsync(u => u.User.UID == uid || u.User.Alias == uid))?.User;//显示子账号信息
         }
         
-        var auth = await db.Auth.Include(u => u.PrimaryUser).SingleOrDefaultAsync(u => u.UserUID == dbUser.UID).ConfigureAwait(false);
-        var groups = await db.Groups.Where(g => g.OwnerUID == dbUser.UID).ToListAsync().ConfigureAwait(false);
-        var groupsJoined = await db.GroupPairs.Where(g => g.GroupUserUID == dbUser.UID).ToListAsync().ConfigureAwait(false);
+        var auth = await db.Auth.Include(u => u.PrimaryUser).AsNoTracking().SingleOrDefaultAsync(u => u.UserUID == dbUser.UID).ConfigureAwait(false);
+        var groups = await db.Groups.Where(g => g.OwnerUID == dbUser.UID).AsNoTracking().ToListAsync().ConfigureAwait(false);
+        var groupsJoined = await db.GroupPairs.Where(g => g.GroupUserUID == dbUser.UID).AsNoTracking().ToListAsync().ConfigureAwait(false);
         var identity = await _connectionMultiplexer.GetDatabase().StringGetAsync("UID:" + dbUser.UID).ConfigureAwait(false);
         var online = string.IsNullOrEmpty(identity) ? string.Empty : dbUser.UID + Environment.NewLine;
 
@@ -409,7 +409,7 @@ public class MareModule : InteractionModuleBase
         }
         else
         {
-            var secondaryUIDs = await db.Auth.Where(p => p.PrimaryUserUID == dbUser.UID).Select(p => p.UserUID).ToListAsync();
+            var secondaryUIDs = await db.Auth.Where(p => p.PrimaryUserUID == dbUser.UID).Select(p => p.UserUID).AsNoTracking().ToListAsync();
             if (secondaryUIDs.Any())
             {
                 eb.AddField("辅助UID:", string.Join(Environment.NewLine, secondaryUIDs));
@@ -442,12 +442,27 @@ public class MareModule : InteractionModuleBase
             eb.AddField("在线角色ID", identity.ToString().Trim('"'));
         }
         
-        if (isAdminCall && auth.CharaIds is not null)
+        if (isAdminCall)
         {
-            eb.AddField("曾用角色ID数量", auth.CharaIds.Count);
-            if (auth.CharaIds.Count > 0)
+            if (string.IsNullOrEmpty(auth.PrimaryUserUID) && auth.CharaIds is not null)
             {
-                eb.AddField("曾用角色ID", string.Join(Environment.NewLine, auth.CharaIds.Take(5)));
+                eb.AddField("曾用角色ID数量", auth.CharaIds.Count);
+                if (auth.CharaIds.Count > 0)
+                {
+                    eb.AddField("曾用角色ID", string.Join(Environment.NewLine, auth.CharaIds.Take(5)));
+                }
+            }
+            else
+            {
+                var primary = await db.Auth.AsNoTracking().FirstOrDefaultAsync(x => x.UserUID == auth.PrimaryUserUID).ConfigureAwait(false);
+                if (primary.CharaIds is not null)
+                {
+                    eb.AddField("曾用角色ID数量(主UID)", primary.CharaIds.Count);
+                    if (auth.CharaIds.Count > 0)
+                    {
+                        eb.AddField("曾用角色ID(主UID)", string.Join(Environment.NewLine, primary.CharaIds.Take(5)));
+                    }
+                }
             }
         }
         
