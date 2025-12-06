@@ -530,7 +530,8 @@ public partial class MareHub
         }
 
         await DbContext.SaveChangesAsync().ConfigureAwait(false);
-
+        
+        await CleanVisibilityCacheFromRedis().ConfigureAwait(false);
         return true;
     }
 

@@ -135,6 +135,8 @@ public partial class MareHub
             await Clients.User(UserUID).Client_UserSendOnline(new(otherUser.ToUserData(), otherIdent)).ConfigureAwait(false);
             await Clients.User(otherUser.UID).Client_UserSendOnline(new(user.ToUserData(), UserCharaIdent)).ConfigureAwait(false);
         }
+        
+        await CleanVisibilityCacheFromRedis().ConfigureAwait(false);
     }
 
     [Authorize(Policy = "Identified")]
@@ -338,6 +340,8 @@ public partial class MareHub
             await Clients.User(UserUID).Client_UserSendOffline(dto).ConfigureAwait(false);
             await Clients.User(dto.User.UID).Client_UserSendOffline(new(new(UserUID))).ConfigureAwait(false);
         }
+        
+        await CleanVisibilityCacheFromRedis().ConfigureAwait(false);
     }
 
     [Authorize(Policy = "Identified")]
@@ -481,32 +485,60 @@ public partial class MareHub
             return;
         }
 
-        var permissibleGroupGIDsQuery = DbContext.GroupPairPreferredPermissions.AsNoTracking()
-            .Where(gpp => gpp.UserUID == dto.user.UID && !gpp.IsPaused && gpp.ShareLocation == true)
-            .Select(gpp => gpp.GroupGID);
+        if (!string.Equals(UserUID, dto.user.UID, StringComparison.Ordinal))
+        {
+            _logger.LogCallWarning(MareHubLogger.Args("LocationDto with another UID :",UserUID, dto));
+            return;
+        }
+        
+        var visibilityCacheKey = $"Visibility:{UserUID}";
+        
+        var allUsers = await _redis.GetAsync<List<string>>(visibilityCacheKey).ConfigureAwait(false);
+        if (allUsers == null)
+        {
+            var permissibleGroupGIDsQuery = DbContext.GroupPairPreferredPermissions.AsNoTracking()
+                .Where(gpp => gpp.UserUID == dto.user.UID && !gpp.IsPaused && gpp.ShareLocation == true)
+                .Select(gpp => gpp.GroupGID);
 
-        var groupUserUIDsQuery = DbContext.GroupPairs.AsNoTracking()
-            .Where(gp => permissibleGroupGIDsQuery.Contains(gp.GroupGID))
-            .Select(gp => gp.GroupUserUID)
-            .Distinct();
+            var groupUserUIDsQuery = DbContext.GroupPairs.AsNoTracking()
+                .Where(gp => permissibleGroupGIDsQuery.Contains(gp.GroupGID))
+                .Select(gp => gp.GroupUserUID);
 
-        var directlySharedUserUIDsQuery = DbContext.Permissions.AsNoTracking()
-            .Where(p => p.UserUID == dto.user.UID && !p.IsPaused && p.ShareLocation == true)
-            .Select(p => p.OtherUserUID);
+            var directlySharedUserUIDsQuery = DbContext.Permissions.AsNoTracking()
+                .Where(p => p.UserUID == dto.user.UID && !p.IsPaused && p.ShareLocation == true)
+                .Select(p => p.OtherUserUID);
 
-        var allUsers = directlySharedUserUIDsQuery.ToList()
-            .Union(groupUserUIDsQuery.ToList(), StringComparer.Ordinal).Distinct(StringComparer.Ordinal);
-
+            allUsers = await directlySharedUserUIDsQuery
+                .Union(groupUserUIDsQuery)
+                .Distinct()
+                .ToListAsync().ConfigureAwait(false);
+            
+            await _redis.AddAsync(
+                visibilityCacheKey, 
+                allUsers, 
+                TimeSpan.FromMinutes(30), 
+                StackExchange.Redis.When.Always, 
+                StackExchange.Redis.CommandFlags.FireAndForget
+            ).ConfigureAwait(false);
+        }
+        
+        var key = $"Location:{UserUID}";
+        
         if (offline)
         {
-            await _redis.RemoveAsync("Location:" +  dto.user.UID, StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
+            await _redis.RemoveAsync(key, StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
+            await Clients.Users(allUsers).Client_SendLocationToClient(dto).ConfigureAwait(false);
         }
         else
         {
-            await _redis.AddAsync($"Location:{dto.user.UID}", dto).ConfigureAwait(false);
+            var currentLocation = await _redis.GetAsync<LocationDto>(key).ConfigureAwait(false);
+            
+            await _redis.AddAsync(key, dto).ConfigureAwait(false);
+            if (allUsers.Count != 0 && currentLocation != dto)
+            {
+                await Clients.Users(allUsers).Client_SendLocationToClient(dto).ConfigureAwait(false);
+            }
         }
-
-        await Clients.Users(allUsers).Client_SendLocationToClient(dto).ConfigureAwait(false);
     }
 
     [Authorize(Policy = "Identified")]

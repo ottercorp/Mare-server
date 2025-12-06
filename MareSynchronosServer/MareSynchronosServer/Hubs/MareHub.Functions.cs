@@ -101,6 +101,11 @@ public partial class MareHub
         await _redis.RemoveAsync("UID:" + UserUID, StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
     }
 
+    private async Task CleanVisibilityCacheFromRedis()
+    {
+        await _redis.RemoveAsync($"Visibility:{UserUID}", StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
+    }
+
     private async Task SendGroupDeletedToAll(List<GroupPair> groupUsers)
     {
         foreach (var pair in groupUsers)
