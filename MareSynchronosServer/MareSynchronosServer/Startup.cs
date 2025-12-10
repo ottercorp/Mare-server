@@ -174,7 +174,7 @@ public class Startup
                 TargetRole = ServerEnumerationStrategy.TargetRoleOptions.Any,
                 UnreachableServerAction = ServerEnumerationStrategy.UnreachableServerActionOptions.Throw,
             },
-            MaxValueLength = 1024,
+            MaxValueLength = 1024 * 1024 * 20,
             PoolSize = mareConfig.GetValue(nameof(ServerConfiguration.RedisPool), 50),
             SyncTimeout = options.SyncTimeout,
         };
