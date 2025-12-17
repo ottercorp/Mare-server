@@ -12,13 +12,7 @@ RUN dotnet publish \
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
-RUN adduser \
-        --disabled-password \
-        --group \
-        --no-create-home \
-        --quiet \
-        --system \
-        mare
+RUN useradd -r -U -M -s /bin/false mare
 
 COPY --from=BUILD /MareSynchronosServices /opt/MareSynchronosServices
 RUN chown -R mare:mare /opt/MareSynchronosServices
