@@ -42,16 +42,12 @@ public class Moodles
     
     public string CustomFXPath { get; set; }
     public string Applier { get; set; }
-    public bool Dispelable  { get; set; } //
     public int Stacks { get; set; }
     public int StackSteps  { get; set; }
     public Modifiers Modifier { get; set; }
     
     public Guid ChainedStatus { get; set; }
     public ChainTriggerEnum ChainTrigger { get; set; }
-    
-    public bool StackOnReapply  { get; set; } //
-    public int StacksIncOnReapply  { get; set; } //
     
     public int Days { get; set; }
     public int Hours { get; set; }
