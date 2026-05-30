@@ -613,7 +613,7 @@ internal class DiscordBot : IHostedService
 
     private async Task RemoveUsersNotInVanityRole(CancellationToken token)
     {
-        var guild = (await _discordClient.Rest.GetGuildsAsync().ConfigureAwait(false)).First();
+        var guild = (await _discordClient.Rest.GetGuildsAsync().ConfigureAwait(false)).First(x => x.Id == 1092933742567374982);
 
         while (!token.IsCancellationRequested)
         {
